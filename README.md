@@ -1,5 +1,6 @@
 # blazor-go-grpc
 
+```plaintext
 blazor-go-grpc/
 ├── backend/                 # Go gRPC server
 │   ├── main.go              # Main Go server code
