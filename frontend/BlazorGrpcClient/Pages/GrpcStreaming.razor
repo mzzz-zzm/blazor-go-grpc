@@ -1,0 +1,113 @@
+@page "/grpc-streaming"
+@using System.Threading.Tasks
+@using BlazorGrpcClient.proto
+@inject BlazorGrpcClient.proto.Greeter.GreeterClient GreeterClient
+@inject ILogger<GrpcStreaming> Logger
+
+<PageTitle>gRPC Streaming Demo</PageTitle>
+
+<h1>gRPC Server Streaming Demo</h1>
+
+<div class="mb-3">
+    <label for="streamName" class="form-label">Your Name:</label>
+    <input id="streamName" class="form-control" @bind="name" />
+</div>
+
+<button class="btn btn-primary" @onclick="StartStreaming" disabled="@isBusy">
+    @if (isBusy)
+    {
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        <span> Streaming...</span>
+    }
+    else
+    {
+        <span>Start Streaming</span>
+    }
+</button>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">
+        <h4>Error</h4>
+        <p>@errorMessage</p>
+    </div>
+}
+
+<div class="mt-4">
+    <h3>Streaming Responses</h3>
+    @if (responses.Count == 0 && !isBusy)
+    {
+        <p>No responses received yet. Click "Start Streaming" to begin.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var response in responses)
+            {
+                <li class="list-group-item">
+                    <strong>@response.Message</strong>
+                    <br />
+                    <small class="text-muted">@response.Timestamp</small>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+<div class="mt-4">
+    <h3>Debugging Information</h3>
+    <pre class="bg-light p-3">@debugLog</pre>
+</div>
+
+@code {
+    private string name = "Blazor User";
+    private List<HelloReply> responses = new List<HelloReply>();
+    private string errorMessage = "";
+    private bool isBusy = false;
+    private string debugLog = "No streaming started yet.";
+
+    private async Task StartStreaming()
+    {
+        try
+        {
+            isBusy = true;
+            errorMessage = "";
+            responses.Clear();
+            debugLog = $"Starting stream with name: {name}...\n";
+
+            Logger.LogInformation("Starting gRPC stream with name: {Name}", name);
+            
+            // Create the request
+            var request = new HelloRequest { Name = name };
+            
+            // Start the streaming call
+            using var call = GreeterClient.SayHellos(request);
+            
+            // Read the streaming responses
+            while (await call.ResponseStream.MoveNext(CancellationToken.None))
+            {
+                var response = call.ResponseStream.Current;
+                responses.Add(response);
+                debugLog += $"Received stream message at {DateTime.Now}: {response.Message}\n";
+                Logger.LogInformation("Received stream message: {Message}", response.Message);
+                
+                // Force UI update since we're in a loop
+                StateHasChanged();
+            }
+            
+            debugLog += "Stream completed\n";
+            Logger.LogInformation("gRPC stream completed");
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors
+            errorMessage = ex.ToString();
+            debugLog += $"Error occurred: {ex.Message}\n";
+            Logger.LogError(ex, "Error in gRPC streaming");
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

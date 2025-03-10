@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "github.com/mzzz-zzm/blazor-go-grpc/pb/greet";
+option csharp_namespace = "BlazorGrpcClient.proto";
+
+package greet;
+
+// The greeting service definition
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply);
+  
+  // Streaming response example
+  rpc SayHellos (HelloRequest) returns (stream HelloReply);
+}
+
+// The request message containing the user's name
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greeting
+message HelloReply {
+  string message = 1;
+  string timestamp = 2;
+}

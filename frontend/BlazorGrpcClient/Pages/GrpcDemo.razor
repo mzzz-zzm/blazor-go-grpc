@@ -1,0 +1,93 @@
+@page "/grpc-demo"
+@using System.Threading.Tasks
+@using BlazorGrpcClient.proto
+@inject BlazorGrpcClient.proto.Greeter.GreeterClient GreeterClient
+@inject ILogger<GrpcDemo> Logger
+
+<PageTitle>gRPC Demo</PageTitle>
+
+<h1>gRPC Request-Response Demo</h1>
+
+<div class="mb-3">
+    <label for="name" class="form-label">Your Name:</label>
+    <input id="name" class="form-control" @bind="name" />
+</div>
+
+<button class="btn btn-primary" @onclick="SendRequest" disabled="@isBusy">
+    @if (isBusy)
+    {
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        <span> Sending...</span>
+    }
+    else
+    {
+        <span>Send gRPC Request</span>
+    }
+</button>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">
+        <h4>Error</h4>
+        <p>@errorMessage</p>
+    </div>
+}
+else if (response != null)
+{
+    <div class="alert alert-success mt-3">
+        <h4>Response Received</h4>
+        <p>Message: <strong>@response.Message</strong></p>
+        <p>Timestamp: <strong>@response.Timestamp</strong></p>
+    </div>
+}
+
+<div class="mt-4">
+    <h3>Debugging Information</h3>
+    <p>Current connection status and logs will appear here.</p>
+    <pre class="bg-light p-3">@debugLog</pre>
+</div>
+
+@code {
+    private string name = "Blazor User";
+    private HelloReply? response;
+    private string errorMessage = "";
+    private bool isBusy = false;
+    private string debugLog = "No requests sent yet.";
+
+    private async Task SendRequest()
+    {
+        try
+        {
+            isBusy = true;
+            errorMessage = "";
+            response = null;
+            debugLog = $"Sending request with name: {name}...\n";
+
+            Logger.LogInformation("Sending gRPC request with name: {Name}", name);
+            
+            // Create the request
+            var request = new HelloRequest { Name = name };
+            
+            // Send the request and get the response
+            response = await GreeterClient.SayHelloAsync(request);
+            
+            // Log the response
+            debugLog += $"Received response at {DateTime.Now}:\n";
+            debugLog += $"Message: {response.Message}\n";
+            debugLog += $"Timestamp: {response.Timestamp}\n";
+            
+            Logger.LogInformation("Received gRPC response: {Message}", response.Message);
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors
+            errorMessage = ex.ToString();
+            debugLog += $"Error occurred: {ex.Message}\n";
+            Logger.LogError(ex, "Error sending gRPC request");
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

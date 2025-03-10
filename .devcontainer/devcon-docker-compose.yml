@@ -1,0 +1,11 @@
+services:
+  devsvr:
+    container_name: dev.blazor-go-grpc
+    build:
+      context: .
+      dockerfile: devcon.Dockerfile
+
+    volumes:
+      - ../..:/workspaces:cached
+    
+    command: sleep infinity
