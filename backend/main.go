@@ -63,7 +63,7 @@ func main() {
 
 	// Create a CORS handler
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"}, // Allow all origins for demo
+		AllowedOrigins:   []string{"*"}, // TODO:MH Allow all origins for demo; use a specific domain in production
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"*"}, // Allow all headers
 		AllowCredentials: true,

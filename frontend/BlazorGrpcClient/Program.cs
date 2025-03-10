@@ -19,12 +19,13 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddSingleton(services =>
 {
     // Get the server URL - adjust based on environment
-    // var serverUrl = builder.HostEnvironment.IsDevelopment() 
+    // var serverUrl = builder.HostEnvironment.IsDevelopment()
     //     ? "http://localhost:8080" 
     //     : "http://backend:8080";
-    var serverUrl = "http://localhost:8080"; // TODO:MH test; remove and use above line
+
+    var serverUrl = "http://localhost:8080"; // TODO:MH builder.HostEnvironment.IsDevelopment() doesn't pickup env var... bug?
         
-    Console.WriteLine($"gRPC Server URL: {serverUrl}");
+    Console.WriteLine($"-----gRPC Server URL: {serverUrl} host: {builder.HostEnvironment.BaseAddress}");
     
     // Create a gRPC-Web handler
     var httpHandler = new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler());
